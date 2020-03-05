@@ -1,0 +1,19 @@
+{
+    "author": "Paul Gilchrist",
+    "description": "Commonly Used Utilities JavaScript Library",
+    "homepage": "https://github.com/PaulGilchrist/pg-utilities.git",
+    "keywords": [
+        "pg-utilities",
+        "tools",
+        "utilities",
+        "npm"
+    ],
+    "license": "MIT",
+    "main": "utilities",
+    "name": "pg-utilities",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/PaulGilchrist/pg-utilities.git"
+    },
+    "version": "1.0.0"
+}
