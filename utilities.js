@@ -7,7 +7,7 @@ const utilities = {
         });
     },
     filter: (inputObjectArray, searchString) => {
-        // Filters out any object from the array where none of its properties contain the passed in search string
+        // Filters any objects from the array where any of their properties contain the passed in search string
         if (inputObjectArray != null && searchString != null && searchString.length > 0) {
             const searchStringLower = searchString.toLowerCase();
             return inputObjectArray.filter(o => {
