@@ -31,6 +31,17 @@ const utilities = {
 			return v.toString(16);
 		});
 	},
+    isDate: (value) => {
+        var dateFormat;
+        if (toString.call(value) === '[object Date]') {
+            return true;
+        }
+        if (typeof value.replace === 'function') {
+            value.replace(/^\s+|\s+$/gm, '');
+        }
+        dateFormat = /(^\d{1,4}[.|\\/|-]\d{1,2}[.|\\/|-]\d{1,4})(\s*(?:0?[1-9]:[0-5]|1(?=[012])\d:[0-5])\d\s*[ap]m)?$/;
+        return dateFormat.test(value);
+    },
     jsonParseNumbers: (inputObject) => {
         return JSON.parse(inputObject, (k, v) => {
             if(typeof v === "object") {
@@ -40,29 +51,26 @@ const utilities = {
             }
         });
     },
-	nameSort: (a, b) => {
-		if(a.name < b.name) {
-			return -1;
-		} else if (b.name < a.name) {
-			return 1;
-		} else {
-			return 0;
-		}
-	},
     sort: (inputObjectArray, propertyName, descending = false) => {
-        // Sort an array of objects by the value of a given propertyName either ascending (default) or descending
+        // Sort an array of objects (in place) by the value of a given propertyName either ascending (default) or descending
         if (inputObjectArray && propertyName) {
-            return inputObjectArray.sort((a, b) => {
-                if (a[propertyName] < b[propertyName]) {
+            inputObjectArray.sort((a, b) => {
+                let aValue = a[propertyName];
+                let bValue = b[propertyName];
+                // Check if strings are actually dates
+                if(isDate(aValue) && isDate(bValue)) {
+                    aValue = new Date(a[propertyName]);
+                    bValue = new Date(b[propertyName]);
+                }
+                if (aValue < bValue) {
                     return descending ? 1 : -1;
                 }
-                if (b[propertyName] < a[propertyName]) {
+                if (bValue < aValue) {
                     return descending ? -1 : 1;
                 }
                 return 0;
             });
         }
-        return inputObjectArray;
     }
 
 }
