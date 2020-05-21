@@ -96,23 +96,23 @@ const utilities = {
         });
     },
     jwt: {
-        decode: (jwtToken) => {
+        decode: (encodedJwt) => {
             let idTokenPartsRegex = /^([^\.\s]*)\.([^\.\s]+)\.([^\.\s]*)$/;
-            let matches = idTokenPartsRegex.exec(jwtToken);
+            let matches = idTokenPartsRegex.exec(encodedJwt);
             if (!matches || matches.length < 4) {
                 console.log('The returned token is not parseable.');
                 return null;
             }
-            let crackedToken = {
+            let decodedJwt = {
                 header: matches[1],
                 payload: matches[2],
                 signature: matches[3]
             };
-            return crackedToken;
+            return decodedJwt;
         },
-        extractHeader: (jwtToken) => {
+        extractHeader: (encodedJwt) => {
             // id token will be decoded to get the username
-            let decodedJwt = utilities.jwt.decode(jwtToken);
+            let decodedJwt = utilities.jwt.decode(encodedJwt);
             if(decodedJwt) {
                 try {
                     return JSON.parse(utilities.base64Decode(decodedJwt.header));
@@ -122,9 +122,9 @@ const utilities = {
             }
             return null;
         },
-        extractSignature: (jwtToken) => {
+        extractSignature: (encodedJwt) => {
             // id token will be decoded to get the username
-            let decodedJwt = utilities.jwt.decode(jwtToken);
+            let decodedJwt = utilities.jwt.decode(encodedJwt);
             if(decodedJwt) {
                 try {
                     return JSON.parse(utilities.base64Decode(decodedJwt.signature));
@@ -134,24 +134,24 @@ const utilities = {
             }
             return null;
         },
-        extractToken: (encodedToken) => {
+        extractToken: (encodedJwt) => {
             // id token will be decoded to get the username
-            let decodedToken = utilities.jwt.decode(encodedToken);
-            let base64Token = null;
-            if(decodedToken) {
-                base64Token = decodedToken.payload;
+            let decodedJwt = utilities.jwt.decode(encodedJwt);
+            let base64Jwt = null;
+            if(decodedJwt) {
+                base64Jwt = decodedJwt.payload;
             } else {
-                base64Token = encodedToken;
+                base64Jwt = encodedJwt;
             }
             try {
-                return JSON.parse(utilities.base64Decode(base64Token));
+                return JSON.parse(utilities.base64Decode(base64Jwt));
             } catch (err) {
                 console.log('The token could not be decoded: ' + err);
             }
             return null;
         },
-        verify: async (accessToken) => {
-            const header = utilities.jwt.extractHeader(accessToken);
+        verify: async (encodedJwt) => {
+            const header = utilities.jwt.extractHeader(encodedJwt);
             // Get Azure configuration
             // const configuration = await axios.request({
             //     data: null,            
@@ -181,7 +181,7 @@ const utilities = {
             // Make sure the key used to encrypt the token matches Microsoft's key
             const matchingKey = keys.find(key => key.kid===header.kid);
             const certificate = `-----BEGIN CERTIFICATE-----\n${matchingKey.x5c}\n-----END CERTIFICATE-----`;
-            return jwtWebToken.verify(accessToken, certificate);
+            return jwtWebToken.verify(encodedJwt, certificate);
         }
     }
 }
