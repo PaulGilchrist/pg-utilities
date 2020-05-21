@@ -1,6 +1,6 @@
 const axios = require('axios');
 const https = require('https');
-const jwt = require('jsonwebtoken');
+const jwtWebToken = require('jsonwebtoken');
 
 const utilities = {
     abs: (inputObjectArray, propertyName) => {
@@ -181,9 +181,9 @@ const utilities = {
             // Make sure the key used to encrypt the token matches Microsoft's key
             const matchingKey = keys.find(key => key.kid===header.kid);
             const certificate = `-----BEGIN CERTIFICATE-----\n${matchingKey.x5c}\n-----END CERTIFICATE-----`;
-            return jwt.verify(accessToken, certificate);
+            return jwtWebToken.verify(accessToken, certificate);
         }
     }
 }
 
-export default utilities;
+module.exports = utilities;
