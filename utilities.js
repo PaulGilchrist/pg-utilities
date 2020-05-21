@@ -1,3 +1,7 @@
+const axios = require('axios');
+const https = require('https');
+const jwt = require('jsonwebtoken');
+
 const utilities = {
     abs: (inputObjectArray, propertyName) => {
         // Converts every negative value for propertyName to its absolute value across an array of objects
@@ -5,6 +9,12 @@ const utilities = {
             i[propertyName] = Math.abs(i[propertyName]);
             return i;
         });
+    },
+    base64Decode: (base64Encoded) => {
+        return Buffer.from(base64Encoded, 'base64').toString();
+    },
+    base64Encode: (string) => {
+        return Buffer.from(string).toString('base64');
     },
     filter: (inputObjectArray, searchString) => {
         // Filters any objects from the array where any of their properties contain the passed in search string
@@ -71,8 +81,109 @@ const utilities = {
                 return 0;
             });
         }
+    },
+    streamToString: async (readableStream) => {
+        // A helper function used to read a Node.js readable stream into a string
+        return new Promise((resolve, reject) => {
+            const chunks = [];
+            readableStream.on("data", (data) => {
+                chunks.push(data.toString());
+            });
+            readableStream.on("end", () => {
+                resolve(chunks.join(""));
+            });
+            readableStream.on("error", reject);
+        });
+    },
+    jwt: {
+        decode: (jwtToken) => {
+            let idTokenPartsRegex = /^([^\.\s]*)\.([^\.\s]+)\.([^\.\s]*)$/;
+            let matches = idTokenPartsRegex.exec(jwtToken);
+            if (!matches || matches.length < 4) {
+                console.log('The returned token is not parseable.');
+                return null;
+            }
+            let crackedToken = {
+                header: matches[1],
+                payload: matches[2],
+                signature: matches[3]
+            };
+            return crackedToken;
+        },
+        extractHeader: (jwtToken) => {
+            // id token will be decoded to get the username
+            let decodedJwt = utilities.jwt.decode(jwtToken);
+            if(decodedJwt) {
+                try {
+                    return JSON.parse(utilities.base64Decode(decodedJwt.header));
+                } catch (err) {
+                    console.log('The token could not be decoded: ' + err);
+                }
+            }
+            return null;
+        },
+        extractSignature: (jwtToken) => {
+            // id token will be decoded to get the username
+            let decodedJwt = utilities.jwt.decode(jwtToken);
+            if(decodedJwt) {
+                try {
+                    return JSON.parse(utilities.base64Decode(decodedJwt.signature));
+                } catch (err) {
+                    console.log('The token could not be decoded: ' + err);
+                }
+            }
+            return null;
+        },
+        extractToken: (encodedToken) => {
+            // id token will be decoded to get the username
+            let decodedToken = utilities.jwt.decode(encodedToken);
+            let base64Token = null;
+            if(decodedToken) {
+                base64Token = decodedToken.payload;
+            } else {
+                base64Token = encodedToken;
+            }
+            try {
+                return JSON.parse(utilities.base64Decode(base64Token));
+            } catch (err) {
+                console.log('The token could not be decoded: ' + err);
+            }
+            return null;
+        },
+        verify: async (accessToken) => {
+            const header = utilities.jwt.extractHeader(accessToken);
+            // Get Azure configuration
+            // const configuration = await axios.request({
+            //     data: null,            
+            //     headers: {
+            //             'Content-Type': 'application/json'
+            //     },
+            //     httpsAgent: new https.Agent({
+            //         keepAlive: true,
+            //         rejectUnauthorized: false // (NOTE: this will disable client verification)
+            //     }),
+            //     method: 'get',
+            //     url: "https://login.microsoftonline.com/common/.well-known/openid-configuration"
+            // }).then(response => response.data);
+            // Get Azure public encryption keys
+            const keys = await axios.request({
+                data: null,            
+                headers: {
+                        'Content-Type': 'application/json'
+                },
+                httpsAgent: new https.Agent({
+                    keepAlive: true,
+                    rejectUnauthorized: false // (NOTE: this will disable client verification)
+                }),
+                method: 'get',
+                url: "https://login.microsoftonline.com/common/discovery/keys" //could also get from above commented out code - configuration.jwks_uri
+            }).then(response => response.data.keys);
+            // Make sure the key used to encrypt the token matches Microsoft's key
+            const matchingKey = keys.find(key => key.kid===header.kid);
+            const certificate = `-----BEGIN CERTIFICATE-----\n${matchingKey.x5c}\n-----END CERTIFICATE-----`;
+            return jwt.verify(accessToken, certificate);
+        }
     }
-
 }
 
 export default utilities;
