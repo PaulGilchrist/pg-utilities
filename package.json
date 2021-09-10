@@ -1,10 +1,5 @@
 {
     "author": "Paul Gilchrist",
-    "dependencies": {
-        "axios": "^0.19.2",
-        "jsonwebtoken": "^8.5.1"
-    },
-    "devDependencies": {},
     "description": "Commonly Used Utilities JavaScript Library",
     "homepage": "https://github.com/PaulGilchrist/pg-utilities.git",
     "keywords": [
@@ -20,5 +15,5 @@
         "type": "git",
         "url": "https://github.com/PaulGilchrist/pg-utilities.git"
     },
-    "version": "1.0.7"
+    "version": "1.0.8"
 }
